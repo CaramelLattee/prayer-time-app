@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malaysia Prayer Times</title>
+
+  <!--
+    ============================================================
+    SECTION 1: GOOGLE FONTS
+    We load a nice font from Google (free).
+    'Inter' is clean and modern — used by many tech companies.
+    ============================================================
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!--
+    ============================================================
+    SECTION 2: CSS (STYLES)
+    This controls how everything LOOKS — colors, spacing, fonts.
+    Think of CSS as the "clothes" for your HTML.
+    ============================================================
+  -->
+  <style>
+    /* --- Reset & Base --- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; /* makes width/height calculations easier */
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f5f5f0; /* light cream background */
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center; /* center horizontally */
+      align-items: flex-start; /* align to top */
+      padding: 40px 16px;
+    }
+
+    /* --- Main Card Container --- */
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    /* --- App Header --- */
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: #888;
+    }
+
+    /* --- City Selector Row --- */
+    .selector-row {
+      display: flex;        /* puts children side by side */
+      gap: 8px;             /* space between select and button */
+      margin-bottom: 20px;
+    }
+
+    select {
+      flex: 1;              /* takes up remaining space */
+      padding: 10px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      cursor: pointer;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: #4f7942; /* green highlight when focused */
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #4f7942;  /* green — Islamic color theme */
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s; /* smooth color change on hover */
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: #3d6132; /* darker green on hover */
+    }
+
+    button:disabled {
+      background: #aaa;     /* gray when loading */
+      cursor: not-allowed;
+    }
+
+    /* --- Date Display --- */
+    .date-display {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+      min-height: 20px;
+    }
+
+    /* --- Status & Error Messages --- */
+    .status {
+      font-size: 14px;
+      color: #888;
+      text-align: center;
+      padding: 20px 0;
+      display: none; /* hidden by default, shown by JS */
+    }
+
+    .error {
+      font-size: 13px;
+      color: #c0392b;
+      background: #fdf0ef;
+      border: 1px solid #f5c6c3;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: none; /* hidden by default */
+      margin-bottom: 12px;
+    }
+
+    /* --- Prayer Time Rows --- */
+    .prayer-list {
+      display: flex;
+      flex-direction: column; /* stack rows vertically */
+      gap: 8px;
+    }
+
+    .prayer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* name on left, time on right */
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid #ebebeb;
+      background: #fff;
+      transition: background 0.2s;
+    }
+
+    /* This is the HIGHLIGHTED row for the next prayer */
+    .prayer-row.is-next {
+      background: #f0f7ee;        /* light green background */
+      border-color: #4f7942;      /* green border */
+    }
+
+    .prayer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .prayer-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .prayer-name {
+      font-size: 15px;
+      font-weight: 400;
+      color: #1a1a1a;
+    }
+
+    .prayer-row.is-next .prayer-name {
+      font-weight: 500;
+      color: #3d6132; /* darker green text for next prayer */
+    }
+
+    .prayer-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .prayer-time {
+      font-size: 15px;
+      font-weight: 500;
+      color: #1a1a1a;
+      font-variant-numeric: tabular-nums; /* makes numbers align neatly */
+    }
+
+    .prayer-row.is-next .prayer-time {
+      color: #3d6132;
+    }
+
+    /* --- "Next" Badge --- */
+    .next-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      background: #4f7942;
+      color: white;
+      border-radius: 99px; /* pill shape */
+      font-weight: 500;
+    }
+
+    /* --- Hijri Date at Bottom --- */
+    .hijri-date {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+    }
+
+    /* --- Responsive: smaller screens --- */
+    @media (max-width: 480px) {
+      .card {
+        padding: 24px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!--
+    ============================================================
+    SECTION 3: HTML (STRUCTURE)
+    This is the skeleton of your app.
+    Think of HTML as the "bones" — CSS gives it skin/clothes,
+    and JavaScript gives it life/behaviour.
+    ============================================================
+  -->
+
+  <div class="card">
+
+    <!-- App Title -->
+    <div class="header">
+      <h1>🕌 Prayer Times</h1>
+      <p>Malaysia · Live solat times by city</p>
+    </div>
+
+    <!-- City dropdown + button -->
+    <div class="selector-row">
+      <select id="city-select">
+        <option value="Kuala Lumpur">Kuala Lumpur</option>
+        <option value="Petaling Jaya">Petaling Jaya</option>
+        <option value="Shah Alam">Shah Alam</option>
+        <option value="Johor Bahru">Johor Bahru</option>
+        <option value="Penang">Penang</option>
+        <option value="Kota Kinabalu">Kota Kinabalu</option>
+        <option value="Kuching">Kuching</option>
+        <option value="Ipoh">Ipoh</option>
+        <option value="Melaka">Melaka</option>
+        <option value="Seremban">Seremban</option>
+      </select>
+
+      <!-- id="fetch-btn" so JS can find and disable it while loading -->
+      <button id="fetch-btn" onclick="fetchPrayerTimes()">Get times</button>
+    </div>
+
+    <!-- Shows the city name + Gregorian date -->
+    <div class="date-display" id="date-display"></div>
+
+    <!-- Loading spinner text (shown/hidden by JS) -->
+    <div class="status" id="status">Loading prayer times...</div>
+
+    <!-- Error message (shown/hidden by JS) -->
+    <div class="error" id="error"></div>
+
+    <!-- Prayer time rows will be INJECTED here by JavaScript -->
+    <div class="prayer-list" id="prayer-list"></div>
+
+    <!-- Hijri date at the bottom -->
+    <div class="hijri-date" id="hijri-date"></div>
+
+  </div>
+
+
+  <!--
+    ============================================================
+    SECTION 4: JAVASCRIPT (BEHAVIOUR)
+    This makes the app actually DO something.
+    JS runs in the browser — it can:
+    - Call APIs (fetch data from the internet)
+    - Read/write HTML (add/remove elements)
+    - Respond to user actions (button clicks, etc.)
+    ============================================================
+  -->
+  <script>
+
+    /*
+      ---------------------------------------------------------
+      PART A: DATA — List of prayers we want to display
+      Each object has:
+        key   → matches the field name in the API response
+        label → what we show the user
+        icon  → emoji icon for the row
+      ---------------------------------------------------------
+    */
+    const PRAYERS = [
+      { key: 'Fajr',    label: 'Fajr',    icon: '🌙' },
+      { key: 'Sunrise', label: 'Sunrise', icon: '🌅' },
+      { key: 'Dhuhr',   label: 'Dhuhr',   icon: '☀️'  },
+      { key: 'Asr',     label: 'Asr',     icon: '🌤️'  },
+      { key: 'Maghrib', label: 'Maghrib', icon: '🌇' },
+      { key: 'Isha',    label: 'Isha',    icon: '🌃' },
+    ];
+
+
+    /*
+      ---------------------------------------------------------
+      PART B: HELPER — Figure out which prayer is next
+      
+      How it works:
+      1. Get current time in minutes (e.g. 2:30pm = 870 mins)
+      2. Loop through each prayer time
+      3. Convert prayer time to minutes too
+      4. Return the first prayer that hasn't happened yet
+      5. If all passed, return 'Fajr' (next day)
+      ---------------------------------------------------------
+    */
+    function getNextPrayer(timings) {
+      const now = new Date();
+
+      // Convert current time to total minutes since midnight
+      // e.g. 14:30 → (14 * 60) + 30 = 870 minutes
+      const nowInMinutes = now.getHours() * 60 + now.getMinutes();
+
+      for (const prayer of PRAYERS) {
+        const timeString = timings[prayer.key]; // e.g. "14:30"
+        if (!timeString) continue;
+
+        // Split "14:30" into [14, 30] and convert to minutes
+        const [hours, minutes] = timeString.split(':').map(Number);
+        const prayerInMinutes = hours * 60 + minutes;
+
+        // If this prayer hasn't happened yet → it's the next one
+        if (prayerInMinutes > nowInMinutes) {
+          return prayer.key; // e.g. "Asr"
+        }
+      }
+
+      // All prayers passed for today → next is Fajr tomorrow
+      return 'Fajr';
+    }
+
+
+    /*
+      ---------------------------------------------------------
+      PART C: MAIN FUNCTION — Fetch & display prayer times
+
+      This is an ASYNC function — it uses 'await' to wait for
+      the API response before continuing. Without async/await,
+      the code would run before the data arrives (a common bug).
+      ---------------------------------------------------------
+    */
+    async function fetchPrayerTimes() {
+
+      // --- Step 1: Get references to HTML elements ---
+      // getElementById finds an element by its id="" attribute
+      const citySelect   = document.getElementById('city-select');
+      const fetchBtn     = document.getElementById('fetch-btn');
+      const statusEl     = document.getElementById('status');
+      const errorEl      = document.getElementById('error');
+      const prayerList   = document.getElementById('prayer-list');
+      const dateDisplay  = document.getElementById('date-display');
+      const hijriDisplay = document.getElementById('hijri-date');
+
+      // --- Step 2: Get the selected city ---
+      const city = citySelect.value; // e.g. "Petaling Jaya"
+
+      // --- Step 3: Show loading state ---
+      fetchBtn.disabled  = true;          // disable button while loading
+      fetchBtn.textContent = 'Loading...';
+      statusEl.style.display = 'block';   // show "Loading prayer times..."
+      errorEl.style.display  = 'none';    // hide any old error
+      prayerList.innerHTML   = '';        // clear old prayer rows
+      dateDisplay.textContent = '';
+      hijriDisplay.textContent = '';
+
+      try {
+        // --- Step 4: Build the API URL ---
+        // The Aladhan API is FREE — no API key needed!
+        // Format today's date as DD-MM-YYYY (required by the API)
+        const today = new Date();
+        const dd    = String(today.getDate()).padStart(2, '0');   // "05"
+        const mm    = String(today.getMonth() + 1).padStart(2, '0'); // months are 0-indexed!
+        const yyyy  = today.getFullYear();
+        const dateString = `${dd}-${mm}-${yyyy}`; // "05-04-2025"
+
+        // Method 3 = Muslim World League (standard for Malaysia)
+        const apiUrl = `https://api.aladhan.com/v1/timingsByCity/${dateString}?city=${encodeURIComponent(city)}&country=Malaysia&method=3`;
+
+        // --- Step 5: Call the API ---
+        // fetch() sends an HTTP request to the URL
+        // 'await' pauses here until the response arrives
+        const response = await fetch(apiUrl);
+
+        // Convert the raw response into a JavaScript object
+        const data = await response.json();
+
+        // Check if the API returned an error
+        if (data.code !== 200) {
+          throw new Error('API returned an error: ' + data.status);
+        }
+
+        // --- Step 6: Extract the data we need ---
+        // data.data.timings looks like:
+        // { Fajr: "05:46", Sunrise: "07:01", Dhuhr: "13:14", ... }
+        const timings   = data.data.timings;
+        const gregDate  = data.data.date.readable;   // "05 Apr 2025"
+        const hijriData = data.data.date.hijri;       // Hijri date object
+
+        // --- Step 7: Figure out the next prayer ---
+        const nextPrayer = getNextPrayer(timings); // e.g. "Asr"
+
+        // --- Step 8: Hide loading, show date ---
+        statusEl.style.display = 'none';
+        dateDisplay.textContent = `${city} · ${gregDate}`;
+
+        // --- Step 9: Build the prayer rows and add to page ---
+        // .forEach() loops through every prayer in our PRAYERS array
+        PRAYERS.forEach(function(prayer) {
+          const time = timings[prayer.key]; // get the time for this prayer
+          if (!time) return; // skip if time is missing
+
+          const isNext = (prayer.key === nextPrayer); // is this the next prayer?
+
+          // Create a new <div> element for this row
+          const row = document.createElement('div');
+          row.className = 'prayer-row' + (isNext ? ' is-next' : '');
+          // If isNext is true → class = "prayer-row is-next"
+          // If isNext is false → class = "prayer-row"
+
+          // Build the inner HTML of the row
+          // Template literals (backticks) let us insert variables with ${}
+          row.innerHTML = `
+            <div class="prayer-left">
+              <span class="prayer-icon">${prayer.icon}</span>
+              <span class="prayer-name">${prayer.label}</span>
+            </div>
+            <div class="prayer-right">
+              <span class="prayer-time">${time}</span>
+              ${isNext ? '<span class="next-badge">Next</span>' : ''}
+            </div>
+          `;
+          // The line above uses a TERNARY OPERATOR:
+          // condition ? value_if_true : value_if_false
+          // If isNext → show the green "Next" badge, else show nothing
+
+          // Add the row to the prayer list on the page
+          prayerList.appendChild(row);
+        });
+
+        // --- Step 10: Show Hijri date ---
+        hijriDisplay.textContent = `${hijriData.day} ${hijriData.month.en} ${hijriData.year} AH`;
+
+      } catch (error) {
+        // --- If ANYTHING goes wrong above, we land here ---
+        // console.error prints to browser DevTools (F12 → Console)
+        console.error('Error fetching prayer times:', error);
+
+        statusEl.style.display = 'none';
+        errorEl.style.display  = 'block';
+        errorEl.textContent    = 'Could not load prayer times. Please check your internet connection and try again.';
+
+      } finally {
+        // --- This ALWAYS runs, whether success or error ---
+        // Re-enable the button so user can try again
+        fetchBtn.disabled    = false;
+        fetchBtn.textContent = 'Get times';
+      }
+    }
+
+
+    /*
+      ---------------------------------------------------------
+      PART D: AUTO-LOAD on page open
+      Call fetchPrayerTimes() immediately when the page loads
+      so the user sees data right away (default city = KL)
+      ---------------------------------------------------------
+    */
+    fetchPrayerTimes();
+
+  </script>
+
+</body>
+</html>
